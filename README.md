@@ -6,8 +6,77 @@ Este repositorio contiene la solución al reto técnico para la posición de **L
 - **Ejercicio 2: Ejercicio Técnico Práctico** (carpeta `nest-api/` y `lambdas/`).
 
 
+## 1. Caso de Arquitectura
+A nivel de arquitectura lógica, la solución propuesta para el envío de mensajes (SMS / WhatsApp simulado) se basa en:
 
-## Arquitectura (Ejercicio 2)
+- Un microservicio stateless en NestJS expuesto públicamente.
+- Colas SQS para desacoplar la recepción del mensaje del procesamiento.
+- AWS Lambda para el procesamiento asíncrono.
+- RDS MySQL para la persistencia y trazabilidad del estado del mensaje.
+
+La arquitectura podría evolucionar así:
+
+1. **Escalabilidad**
+   - Aplicación stateless (NestJS) en Elastic Beanstalk
+      - La app se despliega en Elastic Beanstalk (Node.js) detrás de un load balancer.
+      - Al ser stateless, se puede escalar horizontalmente agregando más instancias según la demanda.
+
+   - Colas SQS como buffer
+      - SQS desacopla la recepción del mensaje del procesamiento.
+      - Es posible aumentar el número de Lambdas consumidoras para procesar mensajes en paralelo sin impactar al endpoint de entrada.
+
+   - RDS MySQL escalable
+      - Para un entorno productivo se puede habilitar:
+         - Multi-AZ para alta disponibilidad.
+         - Read replicas para reportes/consultas pesadas sin cargar la base principal.
+
+2. **Tolerancia a fallos**
+   - SQS y reintentos automáticos
+      - Si una Lambda falla al procesar un mensaje, SQS reintenta automáticamente según la configuración.
+      - Se pueden definir Dead-letter queues (DLQ) para mensajes que fallen repetidamente y evitar perder información.
+
+   - Alta disponibilidad en la capa de cómputo
+      - Elastic Beanstalk y Lambda se ejecutan sobre infraestructura multi-AZ (zonas de disponibilidad) en AWS, reduciendo el impacto de fallas aisladas.
+
+   - Base de datos tolerante a fallos
+      - Con RDS MySQL en configuración Multi-AZ se tiene un standby sincronizado listo para asumir en caso de caída del primario.
+
+3. **Seguridad de datos**
+   - Aislamiento de red
+      - RDS y Lambdas deberían residir en subredes privadas dentro de una VPC, sin exposición directa a Internet.
+      - Solo el frontend (Elastic Beanstalk) estaría expuesto públicamente.
+   - Cifrado
+      - En tránsito: todo el tráfico externo debería ir sobre HTTPS.
+      - En reposo:
+         - RDS con cifrado habilitado.
+         - SQS cifrado con KMS (AWS Key Management Service).
+   - Control de acceso (IAM)
+      - Roles específicos por componente:
+         - Rol de ejecución de Elastic Beanstalk con permisos mínimos para publicar en SQS.
+         - Roles de Lambda con permisos mínimos para leer de SQS y acceder a RDS.
+
+4. **Observabilidad (logs, métricas, alarmas)**
+   - Logs centralizados
+      - Logs de la aplicación NestJS y de las Lambdas enviados a CloudWatch Logs.
+
+   - SQS:
+      - ApproximateNumberOfMessagesVisible (mensajes en cola pendientes).
+      - Mensajes enviados/borrados por intervalo.
+
+   - RDS:
+      - Uso de CPU.
+      - Conexiones activas.
+
+   - Alarmas (CloudWatch Alarms)
+      - Notificaciones por SNS / email cuando:
+         - La cola SQS supera cierto umbral de mensajes pendientes.
+         - Las Lambdas presentan un porcentaje alto de errores.
+         - RDS se acerca al límite de conexiones o uso de CPU elevado.
+
+
+
+
+## 2. Ejercicio Técnico Práctico
 
 Flujo completo:
 
@@ -62,17 +131,17 @@ Reto_Tecnico_lider/
 │  ├─ confirm-delivery.ts
 │  └─ process-message.ts
 └─ README.md
+```
 
-
+ 
 ## Probar el microservicio (Postman)
-
 ### Endpoint
 
-```http
 POST http://sinapsis-messaging-api-env.eba-akg2pqd4.us-east-1.elasticbeanstalk.com/messages/send
 
 Content-Type: application/json
 
+### Body (raw → JSON)
 {
   "channel": "WHATSAPP",
   "to": "+51999999999",
