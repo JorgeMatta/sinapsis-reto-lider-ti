@@ -11,27 +11,24 @@ Este repositorio contiene la solución al reto técnico para la posición de **L
 
 Flujo completo:
 
-1. **API Gateway (HTTP API)** expone el endpoint:
-
-   `POST /send-message`
-
-2. La petición se integra vía HTTP con el microservicio **NestJS** desplegado en AWS **Elastic Beanstalk**:
+1. El cliente invoca directamente el endpoint HTTP con el microservicio **NestJS** desplegado en AWS **Elastic Beanstalk**:
 
    - Endpoint NestJS interno: `/messages/send`
    - http://sinapsis-messaging-api-env.eba-akg2pqd4.us-east-1.elasticbeanstalk.com/messages/send
 
-3. El microservicio:
+2. El microservicio:
 
+   - Recibe la petición en `/messages/send`.
    - Valida el cuerpo (`channel`, `to`, `body`) usando `class-validator`.
    - Encola un mensaje en **Amazon SQS** (`message-send-queue`).
 
-4. Procesar mensaje - **Lambda `process-message`**:
+3. Procesar mensaje - **Lambda `process-message`**:
 
    - Se dispara por mensajes en `message-send-queue`.
    - Inserta el registro en **RDS MySQL** (DB `messaging`, tabla `messages`) con estado `PENDING`.
    - Encola un segundo mensaje en `delivery-confirmation-queue` con un `DelaySeconds` de 30s.
 
-5. Simula confirmacion - **Lambda `confirm-delivery`**:
+4. Simula confirmacion - **Lambda `confirm-delivery`**:
 
    - Se dispara por mensajes en `delivery-confirmation-queue`.
    - Actualiza el estado del mensaje en MySQL a `DELIVERED`.
@@ -46,6 +43,7 @@ Flujo completo:
 
 ## Estructura de carpetas
 
+```text
 Reto_Tecnico_lider/
 ├─ nest-api/
 │  ├─ src/
