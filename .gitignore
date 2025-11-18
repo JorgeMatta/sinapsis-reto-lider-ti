@@ -1,0 +1,20 @@
+# Node / NestJS
+node_modules/
+dist/
+.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Zips de despliegue
+*.zip
+
+# Coverage / tests
+coverage/
+
+# Sistema
+.DS_Store
+Thumbs.db
