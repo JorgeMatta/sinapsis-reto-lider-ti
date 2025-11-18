@@ -14,7 +14,8 @@ Flujo completo:
 1. El cliente invoca directamente el endpoint HTTP con el microservicio **NestJS** desplegado en AWS **Elastic Beanstalk**:
 
    - Endpoint NestJS interno: `/messages/send`
-   - http://sinapsis-messaging-api-env.eba-akg2pqd4.us-east-1.elasticbeanstalk.com/messages/send
+   - URL activa en AWS:
+       http://sinapsis-messaging-api-env.eba-akg2pqd4.us-east-1.elasticbeanstalk.com/messages/send
 
 2. El microservicio:
 
@@ -61,3 +62,27 @@ Reto_Tecnico_lider/
 │  ├─ confirm-delivery.ts
 │  └─ process-message.ts
 └─ README.md
+
+
+## Probar el microservicio (Postman)
+
+### Endpoint
+
+```http
+POST http://sinapsis-messaging-api-env.eba-akg2pqd4.us-east-1.elasticbeanstalk.com/messages/send
+
+Content-Type: application/json
+
+{
+  "channel": "WHATSAPP",
+  "to": "+51999999999",
+  "body": "Hola, este es un mensaje de prueba del reto."
+}r
+
+### Respuesta esperada
+
+{
+  "messageId": "a566e3df-27b9-444e-96f9-db62b69ab3d1",
+  "status": "ENQUEUED",
+  "message": "Mensaje recibido y enviado a la cola."
+}
