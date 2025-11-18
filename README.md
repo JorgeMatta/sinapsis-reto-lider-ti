@@ -62,11 +62,11 @@ La arquitectura podría evolucionar así:
    - SQS:
       - ApproximateNumberOfMessagesVisible (mensajes en cola pendientes).
       - Mensajes enviados/borrados por intervalo.
-
+   
    - RDS:
       - Uso de CPU.
       - Conexiones activas.
-
+   
    - Alarmas (CloudWatch Alarms)
       - Notificaciones por SNS / email cuando:
          - La cola SQS supera cierto umbral de mensajes pendientes.
@@ -83,7 +83,7 @@ Flujo completo:
 1. El cliente invoca directamente el endpoint HTTP con el microservicio **NestJS** desplegado en AWS **Elastic Beanstalk**:
 
    - Endpoint NestJS interno: `/messages/send`
-   - URL activa en AWS:
+   - URL AWS:
        http://sinapsis-messaging-api-env.eba-akg2pqd4.us-east-1.elasticbeanstalk.com/messages/send
 
 2. El microservicio:
